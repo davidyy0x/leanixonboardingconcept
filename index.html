@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeanIX — AI-Native Onboarding Pilot</title>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "72", "SAP 72", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    background: #f5f6f7;
+    color: #1d2d3e;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  a { color: #0a6ed1; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── Demo controls bar ── */
+  #demo-bar {
+    background: #1d2d3e;
+    color: #fff;
+    padding: 8px 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  #demo-bar strong { color: #f0ab00; margin-right: 4px; }
+  #demo-bar label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  #demo-bar input[type=number] {
+    width: 52px; padding: 2px 4px; border-radius: 3px; border: none;
+    font-size: 12px; background: #2d3e50; color: #fff;
+  }
+  #demo-bar button {
+    margin-left: auto; padding: 4px 12px; border-radius: 4px; border: none;
+    background: #0a6ed1; color: #fff; cursor: pointer; font-size: 12px;
+  }
+  #demo-bar button:hover { background: #085caf; }
+
+  /* ── LeanIX top nav mock ── */
+  #nav {
+    background: #fff;
+    border-bottom: 1px solid #d9d9d9;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    height: 44px;
+    gap: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  #nav .logo {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0a6ed1;
+    margin-right: 24px;
+    letter-spacing: -0.5px;
+  }
+  #nav .logo span { color: #1d2d3e; }
+  .nav-item {
+    padding: 0 14px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    color: #556b82;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  .nav-item:hover { color: #1d2d3e; }
+  .nav-item.active { color: #0a6ed1; border-bottom-color: #0a6ed1; font-weight: 600; }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .nav-icon {
+    width: 32px; height: 32px; border-radius: 50%; background: #e5f0fb;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; cursor: pointer; position: relative;
+  }
+  #guide-nav-btn {
+    background: #0a6ed1;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 12px;
+    height: 28px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    border: none;
+  }
+  #guide-nav-btn:hover { background: #085caf; }
+  #guide-nav-btn .dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #f0ab00;
+  }
+
+  /* ── Page layout ── */
+  #app { display: flex; min-height: calc(100vh - 44px - 33px); }
+  #main { flex: 1; padding: 28px 32px; max-width: 900px; }
+
+  /* ── Guide panel ── */
+  #guide-panel {
+    width: 380px;
+    min-width: 380px;
+    background: #fff;
+    border-left: 1px solid #d9d9d9;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 44px - 33px);
+    position: sticky;
+    top: 44px;
+    overflow: hidden;
+  }
+  #guide-panel.hidden { display: none; }
+  .panel-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid #e8e8e8;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .panel-header h2 { font-size: 15px; font-weight: 700; color: #1d2d3e; }
+  .panel-header p { font-size: 12px; color: #556b82; margin-top: 2px; }
+  .panel-close {
+    background: none; border: none; cursor: pointer;
+    color: #556b82; font-size: 18px; line-height: 1; padding: 0;
+  }
+  .panel-close:hover { color: #1d2d3e; }
+  .panel-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+
+  /* ── Intent survey ── */
+  #intent-survey { display: flex; flex-direction: column; gap: 10px; }
+  .intent-q { font-size: 13px; font-weight: 600; color: #1d2d3e; margin-bottom: 4px; }
+  .intent-q-sub { font-size: 12px; color: #556b82; margin-bottom: 12px; line-height: 1.4; }
+  .intent-card {
+    border: 1.5px solid #d9d9d9;
+    border-radius: 8px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .intent-card:hover { border-color: #0a6ed1; background: #f0f7fe; }
+  .intent-card .ic-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .intent-card .ic-title { font-size: 13px; font-weight: 700; color: #1d2d3e; margin-bottom: 3px; }
+  .intent-card .ic-desc { font-size: 12px; color: #556b82; line-height: 1.4; margin-bottom: 6px; }
+  .intent-card .ic-meta { display: flex; gap: 12px; font-size: 11px; color: #0a6ed1; font-weight: 600; }
+  .intent-card.selected { border-color: #0a6ed1; background: #e8f3fd; }
+
+  /* ── Progress bar ── */
+  #progress-section { margin-bottom: 16px; }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: #556b82; margin-bottom: 6px;
+  }
+  .progress-track {
+    height: 6px; background: #e8e8e8; border-radius: 3px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: #0a6ed1; border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  .target-report {
+    background: #e8f3fd; border: 1px solid #b0d4f5; border-radius: 6px;
+    padding: 10px 12px; margin-bottom: 14px; font-size: 12px; color: #1d2d3e;
+  }
+  .target-report strong { display: block; color: #0a6ed1; margin-bottom: 2px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ── Gap steps ── */
+  .gap-step {
+    border: 1px solid #e8e8e8;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .gap-step.active { border-color: #0a6ed1; }
+  .gap-step.done { border-color: #d9d9d9; opacity: 0.55; }
+  .gap-step.blocked { border-color: #e8e8e8; opacity: 0.4; pointer-events: none; }
+
+  .step-header {
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .step-status {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .step-status.todo { background: #e8e8e8; color: #556b82; }
+  .step-status.current { background: #0a6ed1; color: #fff; }
+  .step-status.complete { background: #188918; color: #fff; }
+  .step-status.locked { background: #e8e8e8; color: #bbb; }
+
+  .step-title-block { flex: 1; }
+  .step-title { font-size: 13px; font-weight: 600; color: #1d2d3e; }
+  .step-why { font-size: 11px; color: #0a6ed1; margin-top: 2px; font-style: italic; line-height: 1.3; }
+  .gap-step.done .step-title { color: #888; }
+  .step-count { font-size: 11px; color: #e76500; font-weight: 700; white-space: nowrap; }
+  .step-time { font-size: 11px; color: #556b82; margin-bottom: 8px; }
+  .step-chevron { font-size: 10px; color: #aaa; transition: transform 0.2s; }
+  .step-chevron.open { transform: rotate(90deg); }
+
+  .step-body {
+    padding: 0 14px 14px;
+    display: none;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 12px;
+  }
+  .step-body.open { display: block; }
+  .step-context { font-size: 12px; color: #556b82; margin-bottom: 10px; line-height: 1.5; }
+  .step-action {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #0a6ed1; color: #fff; padding: 6px 14px;
+    border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;
+    border: none; margin-bottom: 12px;
+  }
+  .step-action:hover { background: #085caf; }
+
+  .inline-doc {
+    background: #f8f9fa;
+    border: 1px solid #e8e8e8;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  .inline-doc .doc-title { font-weight: 700; color: #1d2d3e; margin-bottom: 6px; font-size: 12px; }
+  .inline-doc .doc-why { color: #556b82; margin-bottom: 8px; line-height: 1.4; }
+  .inline-doc ol { padding-left: 18px; color: #1d2d3e; line-height: 1.7; }
+  .inline-doc ol li { margin-bottom: 2px; }
+  .doc-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin-top: 8px; font-size: 11px; color: #0a6ed1; font-weight: 600;
+  }
+
+  /* ── Cross-intent nudges ── */
+  .nudge {
+    background: #fff8e6; border: 1px solid #f0c050; border-radius: 6px;
+    padding: 10px 12px; margin-bottom: 8px; font-size: 12px; color: #1d2d3e;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .nudge.hidden { display: none; }
+  .nudge-icon { font-size: 15px; flex-shrink: 0; }
+  .nudge-text { flex: 1; line-height: 1.4; }
+  .nudge-action {
+    display: inline-block; margin-top: 6px;
+    background: none; border: 1px solid #e5a000; color: #8c5c00;
+    padding: 3px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;
+    font-weight: 600;
+  }
+  .nudge-action:hover { background: #fff0c0; }
+
+  /* ── Book session CTA ── */
+  .book-session {
+    background: #f5f6f7; border: 1px dashed #c0c8d0; border-radius: 6px;
+    padding: 12px 14px; text-align: center; margin-top: 12px;
+    font-size: 12px; color: #556b82; line-height: 1.5;
+  }
+  .book-session a {
+    display: inline-block; margin-top: 6px; padding: 5px 14px;
+    background: #fff; border: 1px solid #0a6ed1; border-radius: 4px;
+    color: #0a6ed1; font-weight: 600; font-size: 12px;
+  }
+  .book-session a:hover { background: #f0f7fe; text-decoration: none; }
+
+  /* ── Completion state ── */
+  .completed-state {
+    text-align: center; padding: 24px 16px;
+  }
+  .completed-state .big-check { font-size: 40px; margin-bottom: 10px; }
+  .completed-state h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .completed-state p { font-size: 12px; color: #556b82; line-height: 1.5; margin-bottom: 14px; }
+  .open-report-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #0a6ed1; color: #fff; padding: 8px 18px;
+    border-radius: 4px; font-size: 13px; font-weight: 600;
+  }
+  .open-report-btn:hover { background: #085caf; text-decoration: none; }
+  .ai-upsell {
+    margin-top: 14px; background: #f0f7fe; border: 1px solid #b0d4f5;
+    border-radius: 6px; padding: 10px 12px; font-size: 12px; color: #1d2d3e;
+  }
+  .ai-upsell strong { color: #0a6ed1; }
+
+  /* ── Main content area ── */
+  .page-title { font-size: 20px; font-weight: 700; color: #1d2d3e; margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: #556b82; margin-bottom: 24px; }
+  .placeholder-content {
+    background: #fff; border: 1px solid #e8e8e8; border-radius: 8px;
+    padding: 24px; color: #aaa; font-size: 13px; text-align: center;
+    min-height: 200px; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 8px;
+  }
+  .placeholder-content .ph-icon { font-size: 32px; }
+
+  /* ── Screen mock ── */
+  .screen-mock {
+    background: #fff; border: 1px solid #d9d9d9; border-radius: 8px;
+    overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .mock-bar {
+    background: #f5f6f7; border-bottom: 1px solid #e8e8e8;
+    padding: 8px 14px; display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: #556b82;
+  }
+  .mock-bar .mock-breadcrumb { font-weight: 600; color: #1d2d3e; }
+  .mock-bar .mock-tab {
+    padding: 4px 12px; border-radius: 4px 4px 0 0; font-size: 12px;
+    color: #556b82; cursor: default;
+  }
+  .mock-bar .mock-tab.active {
+    background: #fff; border: 1px solid #e8e8e8; border-bottom: none;
+    color: #0a6ed1; font-weight: 600;
+  }
+  .mock-body { padding: 16px; position: relative; }
+  .mock-section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: #556b82; margin-bottom: 10px;
+  }
+  .mock-row {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+  }
+  .mock-chip {
+    padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600;
+    background: #f0f4f7; color: #1d2d3e; border: 1px solid #d9d9d9;
+    white-space: nowrap;
+  }
+  .mock-chip.highlight {
+    background: #e8f3fd; color: #0a6ed1; border-color: #0a6ed1;
+  }
+  .mock-chip.green { background: #e8f5e8; color: #188918; border-color: #a3d9a3; }
+  .mock-chip.orange { background: #fff3e0; color: #e76500; border-color: #f5c07a; }
+  .mock-list-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+    border: 1px solid #e8e8e8; border-radius: 6px; margin-bottom: 6px;
+    font-size: 12px; background: #fff;
+  }
+  .mock-list-item .mli-icon {
+    width: 24px; height: 24px; border-radius: 4px; background: #e8f3fd;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #0a6ed1; flex-shrink: 0;
+  }
+  .mock-list-item .mli-name { flex: 1; font-weight: 600; color: #1d2d3e; }
+  .mock-list-item .mli-meta { font-size: 11px; color: #556b82; }
+  .mock-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 14px; border-radius: 4px; font-size: 12px; font-weight: 600;
+    cursor: default; border: 1px solid;
+  }
+  .mock-btn.primary { background: #0a6ed1; color: #fff; border-color: #0a6ed1; }
+  .mock-btn.secondary { background: #fff; color: #0a6ed1; border-color: #0a6ed1; }
+  .mock-sidebar {
+    display: flex; gap: 6px; flex-direction: column; margin-bottom: 12px;
+  }
+  .mock-sidebar-item {
+    display: flex; align-items: center; gap: 8px; padding: 5px 8px;
+    border-radius: 4px; font-size: 12px; cursor: default;
+  }
+  .mock-sidebar-item.active {
+    background: #e8f3fd; color: #0a6ed1; font-weight: 600;
+  }
+  .mock-sidebar-item .ms-dot {
+    width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0;
+  }
+  /* Callout overlay on screen mock */
+  .callout-wrap { position: relative; display: inline-block; }
+  .callout-pulse {
+    position: absolute; border-radius: 6px;
+    border: 2.5px solid #f0ab00; background: rgba(240,171,0,0.08);
+    pointer-events: none; animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(240,171,0,0.4); }
+    50% { opacity: 0.85; box-shadow: 0 0 0 6px rgba(240,171,0,0); }
+  }
+  .callout-label {
+    position: absolute; background: #f0ab00; color: #1d2d3e;
+    font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px;
+    white-space: nowrap; z-index: 10;
+  }
+  .mock-context-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  }
+  .mock-context-header .mch-step {
+    background: #0a6ed1; color: #fff; font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px; white-space: nowrap;
+  }
+  .mock-context-header .mch-text { font-size: 13px; font-weight: 600; color: #1d2d3e; }
+
+  /* ── Step connector ── */
+  .steps-list { position: relative; }
+  .step-connector {
+    position: absolute; left: 25px; top: 0; bottom: 0; width: 2px;
+    background: #e8e8e8; z-index: 0;
+  }
+  .gap-step { position: relative; z-index: 1; }
+
+  /* ── Panel tabs ── */
+  .panel-tabs {
+    display: flex; border-bottom: 1px solid #e8e8e8;
+    background: #f5f6f7;
+  }
+  .panel-tab {
+    flex: 1; padding: 9px 0; text-align: center; font-size: 12px;
+    font-weight: 600; color: #556b82; cursor: pointer; border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .panel-tab:hover { color: #1d2d3e; }
+  .panel-tab.active { color: #0a6ed1; border-bottom-color: #0a6ed1; background: #fff; }
+
+  /* ── FS Guide ── */
+  .fs-guide { padding: 4px 0; }
+  .fs-guide-selector {
+    display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+  }
+  .fs-btn {
+    padding: 5px 12px; border-radius: 14px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1.5px solid #d9d9d9; background: #fff; color: #556b82;
+    transition: all 0.12s;
+  }
+  .fs-btn:hover { border-color: #0a6ed1; color: #0a6ed1; }
+  .fs-btn.active { background: #0a6ed1; color: #fff; border-color: #0a6ed1; }
+  .fs-definition {
+    background: #f0f7fe; border: 1px solid #b0d4f5; border-radius: 6px;
+    padding: 10px 12px; margin-bottom: 12px;
+  }
+  .fs-definition .fsd-title {
+    font-size: 13px; font-weight: 700; color: #1d2d3e; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .fs-definition .fsd-icon {
+    width: 22px; height: 22px; border-radius: 4px; display: flex;
+    align-items: center; justify-content: center; font-size: 11px;
+    font-weight: 800; color: #fff; flex-shrink: 0;
+  }
+  .fs-definition p { font-size: 12px; color: #1d2d3e; line-height: 1.5; }
+  .fs-section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: #556b82; margin: 12px 0 6px;
+  }
+  .fs-field {
+    display: flex; gap: 8px; padding: 7px 0;
+    border-bottom: 1px solid #f0f0f0; font-size: 12px;
+  }
+  .fs-field:last-child { border-bottom: none; }
+  .fs-field .ff-name { width: 110px; flex-shrink: 0; font-weight: 600; color: #1d2d3e; }
+  .fs-field .ff-req {
+    font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 3px;
+    height: fit-content; white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+  }
+  .fs-field .ff-req.must { background: #fce8e8; color: #bb0000; }
+  .fs-field .ff-req.should { background: #fff3e0; color: #e76500; }
+  .fs-field .ff-req.nice { background: #f0f0f0; color: #556b82; }
+  .fs-field .ff-desc { flex: 1; color: #556b82; line-height: 1.4; }
+  .fs-relation {
+    display: flex; align-items: center; gap: 8px; padding: 7px 0;
+    border-bottom: 1px solid #f0f0f0; font-size: 12px;
+  }
+  .fs-relation:last-child { border-bottom: none; }
+  .fs-relation .fr-from { font-weight: 600; color: #1d2d3e; }
+  .fs-relation .fr-arrow { color: #0a6ed1; font-weight: 700; flex-shrink: 0; }
+  .fs-relation .fr-to { color: #556b82; flex: 1; }
+  .fs-example {
+    background: #f8f9fa; border: 1px solid #e8e8e8; border-radius: 6px;
+    padding: 10px 12px; margin-top: 10px; font-size: 12px;
+  }
+  .fs-example .fe-title { font-weight: 700; color: #1d2d3e; margin-bottom: 6px; }
+  .fs-example ul { padding-left: 16px; color: #556b82; line-height: 1.8; }
+  .fs-link { display: block; margin-top: 10px; font-size: 11px; font-weight: 600; color: #0a6ed1; }
+
+  /* ── Mock tooltip ── */
+  #mock-tip {
+    position: fixed; z-index: 9999; display: none;
+    background: #1d2d3e; color: #fff; border-radius: 8px;
+    padding: 12px 14px; max-width: 280px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    font-size: 12px; line-height: 1.5;
+  }
+  #mock-tip .mt-path {
+    font-size: 11px; color: #f0ab00; font-weight: 700; margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  #mock-tip .mt-desc { color: #e0e8f0; margin-bottom: 8px; }
+  #mock-tip a {
+    color: #6bb8ff; font-size: 11px; font-weight: 600; display: inline-block;
+  }
+  #mock-tip .mt-close {
+    position: absolute; top: 6px; right: 10px; cursor: pointer;
+    color: #aaa; font-size: 14px; line-height: 1;
+  }
+  .mock-interactive {
+    cursor: pointer !important;
+    transition: opacity 0.12s, transform 0.12s;
+  }
+  .mock-interactive:hover { opacity: 0.82; transform: scale(1.02); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     DEMO CONTROLS  (not in real product)
+═══════════════════════════════════════ -->
+<div id="demo-bar">
+  <strong>🎛 Demo controls</strong>
+  <label>Apps <input type="number" id="ctrl-apps" value="0" min="0" max="500"></label>
+  <label>BCs <input type="number" id="ctrl-bcs" value="0" min="0" max="200"></label>
+  <label>App→BC relations <input type="number" id="ctrl-rel" value="0" min="0" max="500"></label>
+  <label>IT Components <input type="number" id="ctrl-itc" value="0" min="0" max="300"></label>
+  <label>Interfaces <input type="number" id="ctrl-iface" value="0" min="0" max="200"></label>
+  <label>Users <input type="number" id="ctrl-users" value="1" min="1" max="50"></label>
+  <label>FunctFit % <input type="number" id="ctrl-ff" value="0" min="0" max="100"></label>
+  <label>App owners % <input type="number" id="ctrl-owners" value="0" min="0" max="100"></label>
+  <label>TIME % <input type="number" id="ctrl-time" value="0" min="0" max="100"></label>
+  <label>Days since start <input type="number" id="ctrl-days" value="1" min="1" max="90"></label>
+  <button onclick="applyControls()">↺ Apply</button>
+</div>
+
+<!-- ═══════════════════════════════════════
+     TOP NAV (LeanIX chrome mock)
+═══════════════════════════════════════ -->
+<div id="nav">
+  <div class="logo">SAP <span>LeanIX</span></div>
+  <div class="nav-item active">Dashboards</div>
+  <div class="nav-item">Inventory</div>
+  <div class="nav-item">Reports</div>
+  <div class="nav-item">Diagrams</div>
+  <div class="nav-item">More ▾</div>
+  <div class="nav-right">
+    <button id="guide-nav-btn" onclick="togglePanel()">
+      <span class="dot"></span> Getting Started
+    </button>
+    <div class="nav-icon" title="Notifications">🔔</div>
+    <div class="nav-icon" title="Help">?</div>
+    <div class="nav-icon" style="background:#1d2d3e; color:#fff; font-size:12px; font-weight:700;">DH</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     APP BODY
+═══════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Main content: LeanIX workspace background -->
+  <div id="main" style="position:relative; overflow:hidden; background:#f5f6f7;">
+
+    <!-- Screen toggle -->
+    <div id="screen-toggle" style="position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:50;display:flex;background:rgba(255,255,255,0.95);border:1px solid #d9d9d9;border-radius:20px;padding:3px;gap:2px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+      <button id="tog-dash" onclick="setScreen('dashboard')" style="padding:5px 14px;border-radius:16px;border:none;font-size:11px;font-weight:600;cursor:pointer;background:#0a6ed1;color:#fff;">Dashboards</button>
+      <button id="tog-inv" onclick="setScreen('inventory')" style="padding:5px 14px;border-radius:16px;border:none;font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:#556b82;">Inventory</button>
+    </div>
+
+    <!-- Dashboard screen -->
+    <div id="screen-dashboard" style="width:100%;height:100%;overflow:auto;">
+      <!-- Nav -->
+      <div style="background:#fff;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;padding:0 20px;height:44px;position:sticky;top:0;z-index:10;">
+        <div style="font-size:16px;font-weight:800;color:#0a6ed1;margin-right:24px;">SAP <span style="color:#1d2d3e;">LeanIX</span></div>
+        <div style="font-size:13px;color:#0a6ed1;font-weight:600;padding:0 12px;height:44px;display:flex;align-items:center;border-bottom:2px solid #0a6ed1;">Dashboards</div>
+        <div style="font-size:13px;color:#556b82;padding:0 12px;height:44px;display:flex;align-items:center;">Inventory</div>
+        <div style="font-size:13px;color:#556b82;padding:0 12px;height:44px;display:flex;align-items:center;">Reports</div>
+        <div style="font-size:13px;color:#556b82;padding:0 12px;height:44px;display:flex;align-items:center;">Diagrams</div>
+        <div style="font-size:13px;color:#556b82;padding:0 12px;height:44px;display:flex;align-items:center;">More ▾</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+          <div style="background:#f0f0f0;border-radius:4px;padding:6px 120px 6px 10px;font-size:12px;color:#aaa;">Search for fact sheet</div>
+          <div style="font-size:12px;color:#556b82;background:#f0f0f0;border-radius:4px;padding:5px 10px;">Full View ▾</div>
+          <div style="width:28px;height:28px;border-radius:50%;background:#1d2d3e;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">DH</div>
+        </div>
+      </div>
+      <!-- Page header -->
+      <div style="padding:14px 20px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #e8e8e8;background:#fff;">
+        <div style="width:20px;height:20px;border:2px solid #d9d9d9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#aaa;">›</div>
+        <div style="font-size:15px;font-weight:700;color:#1d2d3e;flex:1;">Onboarding: Application Portfolio Management for Enterprise Architects ☆</div>
+        <div style="font-size:12px;color:#556b82;">+ New Dashboard</div>
+        <div style="font-size:12px;color:#556b82;margin-left:12px;">✏ Edit Dashboard</div>
+        <div style="font-size:12px;color:#556b82;margin-left:12px;">···</div>
+      </div>
+      <!-- Content -->
+      <div style="padding:16px 20px;display:flex;gap:16px;">
+        <!-- Main column -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:16px;">
+          <!-- Onboarding Guide widget -->
+          <div style="background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:20px;">
+            <div style="font-size:14px;font-weight:700;color:#1d2d3e;margin-bottom:16px;">Onboarding Guide</div>
+            <div style="display:flex;gap:0;align-items:flex-start;padding:16px;background:#fafafa;border-radius:6px;margin-bottom:16px;">
+              <div style="flex:1;text-align:center;">
+                <div style="width:20px;height:20px;border:2px solid #d9d9d9;border-radius:50%;margin:0 auto 8px;"></div>
+                <div style="font-size:10px;color:#0a6ed1;font-weight:600;background:#e8f3fd;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:4px;">Goal 1</div>
+                <div style="font-size:12px;font-weight:700;color:#1d2d3e;margin-bottom:6px;">Start your onboarding</div>
+                <div style="font-size:11px;color:#556b82;line-height:1.5;">Learn what to expect during onboarding<br>Set up user access<br>Understand the meta model</div>
+              </div>
+              <div style="width:80px;height:2px;background:#e8e8e8;margin-top:9px;flex-shrink:0;"></div>
+              <div style="flex:1;text-align:center;">
+                <div style="width:20px;height:20px;border:2px solid #d9d9d9;border-radius:50%;margin:0 auto 8px;"></div>
+                <div style="font-size:10px;color:#0a6ed1;font-weight:600;background:#e8f3fd;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:4px;">Goal 2</div>
+                <div style="font-size:12px;font-weight:700;color:#1d2d3e;margin-bottom:6px;">Add data to your workspace</div>
+                <div style="font-size:11px;color:#556b82;line-height:1.5;">Explore how to add data<br>Add applications<br>Add business capabilities<br>Add organizations<br>Add relations</div>
+              </div>
+              <div style="width:80px;height:2px;background:#e8e8e8;margin-top:9px;flex-shrink:0;"></div>
+              <div style="flex:1;text-align:center;">
+                <div style="width:20px;height:20px;border:2px solid #d9d9d9;border-radius:50%;margin:0 auto 8px;"></div>
+                <div style="font-size:10px;color:#0a6ed1;font-weight:600;background:#e8f3fd;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:4px;">Goal 3</div>
+                <div style="font-size:12px;font-weight:700;color:#1d2d3e;margin-bottom:6px;">Assess your application portfolio</div>
+                <div style="font-size:11px;color:#556b82;line-height:1.5;">Assign ownership and collect data<br>Assess your application portfolio</div>
+              </div>
+            </div>
+            <button style="background:#0a6ed1;color:#fff;border:none;border-radius:4px;padding:8px 16px;font-size:12px;font-weight:600;cursor:default;">Open Onboarding Guide</button>
+          </div>
+          <!-- Best practice metrics -->
+          <div style="background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:20px;">
+            <div style="font-size:14px;font-weight:700;color:#1d2d3e;margin-bottom:8px;">Best practice metrics</div>
+            <div style="font-size:12px;color:#556b82;margin-bottom:16px;line-height:1.5;">The onboarding best practice metrics are designed to guide you towards establishing data quality in your workspace from the very beginning.</div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#556b82;margin-bottom:10px;">ADD APPLICATIONS</div>
+            <div style="display:flex;gap:10px;">
+              <div style="flex:1;border:1px solid #e8e8e8;border-radius:6px;padding:12px;">
+                <div style="font-size:11px;color:#1d2d3e;font-weight:600;margin-bottom:8px;">Applications* are added to workspace</div>
+                <div style="font-size:20px;font-weight:700;color:#1d2d3e;">–</div>
+                <div style="font-size:10px;color:#888;margin-top:4px;">&gt; 60% recommended</div>
+              </div>
+              <div style="flex:1;border:1px solid #e8e8e8;border-radius:6px;padding:12px;">
+                <div style="font-size:11px;color:#1d2d3e;font-weight:600;margin-bottom:8px;">Applications* in scope</div>
+                <div style="font-size:20px;font-weight:700;color:#1d2d3e;">–</div>
+                <div style="font-size:10px;color:#888;margin-top:4px;">≥ 20 recommended</div>
+              </div>
+              <div style="flex:1;border:1px solid #e8e8e8;border-radius:6px;padding:12px;">
+                <div style="font-size:11px;color:#1d2d3e;font-weight:600;margin-bottom:8px;">Applications* with description</div>
+                <div style="font-size:20px;font-weight:700;color:#1d2d3e;">–</div>
+                <div style="font-size:10px;color:#888;margin-top:4px;">≥ 20 recommended</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Support channels -->
+        <div style="width:280px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;">
+          <div style="background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:16px;">
+            <div style="font-size:14px;font-weight:700;color:#1d2d3e;margin-bottom:12px;">Support Channels</div>
+            <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;">
+              <div style="width:28px;height:28px;background:#e8f3fd;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">📅</div>
+              <div><div style="font-size:12px;font-weight:700;color:#1d2d3e;margin-bottom:3px;">Q&A Sessions: Get help during onboarding</div><div style="font-size:11px;color:#556b82;line-height:1.4;">You're welcome to join the onboarding Q&A sessions hosted by our SAP LeanIX team.</div></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;">
+              <div style="width:28px;height:28px;background:#e8f3fd;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">👥</div>
+              <div><div style="font-size:12px;font-weight:700;color:#1d2d3e;margin-bottom:3px;">Community: Connect with peers</div><div style="font-size:11px;color:#556b82;line-height:1.4;">Tap into best practices from your peers via our community search.</div></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;">
+              <div style="width:28px;height:28px;background:#e8f3fd;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">📄</div>
+              <div><div style="font-size:12px;font-weight:700;color:#1d2d3e;margin-bottom:3px;">Documentation: Step-by-step read through</div><div style="font-size:11px;color:#556b82;line-height:1.4;">The SAP LeanIX documentation hub serves as the central repository for all features.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory screen -->
+    <div id="screen-inventory" style="width:100%;height:100%;overflow:auto;display:none;flex-direction:column;">
+      <!-- Nav (same) -->
+      <div style="background:#fff;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;padding:0 20px;height:44px;flex-shrink:0;">
+        <div style="font-size:16px;font-weight:800;color:#0a6ed1;margin-right:24px;">SAP <span style="color:#1d2d3e;">LeanIX</span></div>
+        <div style="font-size:13px;color:#556b82;padding:0 12px;height:44px;display:flex;align-items:center;">Dashboards</div>
+        <div style="font-size:13px;color:#0a6ed1;font-weight:600;padding:0 12px;height:44px;display:flex;align-items:center;border-bottom:2px solid #0a6ed1;">Inventory</div>
+        <div style="font-size:13px;color:#556b82;padding:0 12px;height:44px;display:flex;align-items:center;">Reports</div>
+        <div style="font-size:13px;color:#556b82;padding:0 12px;height:44px;display:flex;align-items:center;">Diagrams</div>
+        <div style="font-size:13px;color:#556b82;padding:0 12px;height:44px;display:flex;align-items:center;">More ▾</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+          <div style="background:#f0f0f0;border-radius:4px;padding:6px 120px 6px 10px;font-size:12px;color:#aaa;">Search for fact sheet</div>
+          <div style="font-size:12px;color:#556b82;background:#f0f0f0;border-radius:4px;padding:5px 10px;">Full View ▾</div>
+          <div style="width:28px;height:28px;border-radius:50%;background:#1d2d3e;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">DH</div>
+        </div>
+      </div>
+      <!-- Inventory layout -->
+      <div style="display:flex;flex:1;overflow:hidden;">
+        <!-- Sidebar -->
+        <div style="width:210px;flex-shrink:0;border-right:1px solid #e8e8e8;background:#fff;padding:12px;overflow-y:auto;">
+          <div style="display:flex;gap:8px;margin-bottom:12px;border-bottom:1px solid #e8e8e8;padding-bottom:8px;">
+            <div style="font-size:12px;color:#556b82;cursor:pointer;">Searches</div>
+            <div style="font-size:12px;color:#0a6ed1;font-weight:600;border-bottom:2px solid #0a6ed1;padding-bottom:6px;">Filter</div>
+          </div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#556b82;margin-bottom:8px;">Type</div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;"><div style="background:#8b5cf6;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;flex:1;">Objective</div><div style="font-size:11px;color:#aaa;">0</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;"><div style="background:#6366f1;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;flex:1;">Platform</div><div style="font-size:11px;color:#aaa;">0</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;"><div style="background:#3b82f6;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;flex:1;">Initiative</div><div style="font-size:11px;color:#aaa;">0</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;"><div style="background:#22c55e;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;flex:1;">Business Capability</div><div style="font-size:11px;color:#aaa;">0</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;"><div style="background:#f59e0b;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;flex:1;">Business Context</div><div style="font-size:11px;color:#aaa;">0</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;"><div style="background:#f97316;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;flex:1;">Organization</div><div style="font-size:11px;color:#aaa;">0</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;"><div style="background:#3b82f6;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;flex:1;">Application</div><div style="font-size:11px;color:#aaa;">0</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;"><div style="background:#06b6d4;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;flex:1;">Interface</div><div style="font-size:11px;color:#aaa;">0</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;"><div style="background:#8b5cf6;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;flex:1;">Data Object</div><div style="font-size:11px;color:#aaa;">0</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;"><div style="background:#f59e0b;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;flex:1;">IT Component</div><div style="font-size:11px;color:#aaa;">0</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;"><div style="background:#ef4444;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;flex:1;">Provider</div><div style="font-size:11px;color:#aaa;">0</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;margin-bottom:2px;"><div style="background:#6b7280;color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;flex:1;">Tech Category</div><div style="font-size:11px;color:#aaa;">0</div></div>
+        </div>
+        <!-- Empty state -->
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f5f6f7;gap:12px;">
+          <div style="font-size:48px;">🌿</div>
+          <div style="font-size:18px;font-weight:700;color:#1d2d3e;">No Fact Sheets Yet</div>
+          <div style="font-size:13px;color:#556b82;text-align:center;line-height:1.6;">Once you add fact sheets to your inventory, they'll show up here.<br><span style="color:#0a6ed1;">Check our import guide for more details</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-mock-area"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════
+       ONBOARDING GUIDE PANEL
+  ════════════════════════════════════ -->
+  <div id="guide-panel">
+    <div class="panel-header">
+      <div>
+        <h2 id="panel-title">Getting Started</h2>
+        <p id="panel-subtitle">Let's set up your workspace</p>
+      </div>
+      <button class="panel-close" onclick="togglePanel()" title="Close">✕</button>
+    </div>
+    <div class="panel-tabs" id="panel-tabs" style="display:none;">
+      <div class="panel-tab active" id="tab-journey" onclick="switchTab('journey')">Journey</div>
+      <div class="panel-tab" id="tab-guides" onclick="switchTab('guides')">FS Guides</div>
+    </div>
+    <div class="panel-body" id="panel-body">
+      <!-- Content injected by JS -->
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════
+     DATA MODEL
+═══════════════════════════════════════ -->
+<script>
+// ── Workspace state (controlled by demo bar) ──────────────────────────────
+let ws = {
+  appCount: 0,
+  bcCount: 0,
+  relCount: 0,
+  itcCount: 0,
+  ifaceCount: 0,
+  userCount: 1,
+  functFitPct: 0,
+  ownersPct: 0,
+  timePct: 0,
+  daysSinceStart: 1,
+  erpExists: false,
+};
+
+// ── Selected intent ───────────────────────────────────────────────────────
+let selectedIntent = null;
+let panelOpen = true;
+
+// ── Intent definitions (job-first language) ──────────────────────────────
+const INTENTS = {
+  rationalization: {
+    id: 'rationalization',
+    icon: '🗂️',
+    title: 'Show which apps to cut or consolidate',
+    jobStatement: 'Get a defensible portfolio view for your steering committee — showing which applications are redundant, underperforming, or ready to retire.',
+    audience: 'CTO, CFO, IT Steering Committee',
+    timeToResult: '2–4 hours of data entry',
+    targetReport: 'Portfolio Matrix',
+    targetReportDesc: 'Applications mapped to business capabilities, colored by lifecycle and functional fit. Your rationalization candidates in one view.',
+    targetReportUrl: 'https://help.sap.com/docs/leanix/ea/application-rationalization',
+    jtbd: 'Job 1 — Answer the board\'s question before the meeting',
+  },
+  aigovernance: {
+    id: 'aigovernance',
+    icon: '🔐',
+    title: 'Map AI tool usage and tech risk across the org',
+    jobStatement: 'Know which AI tools and technology are in use, who owns them, and which are approaching end of life — before an audit or incident forces your hand.',
+    audience: 'CISO, CTO, Compliance / Audit',
+    timeToResult: '3–5 hours of data entry',
+    targetReport: 'Technology Landscape',
+    targetReportDesc: 'IT components (including AI tools) mapped by business unit with lifecycle status and ownership.',
+    targetReportUrl: 'https://help.sap.com/docs/leanix/ea/getting-started-building-your-it-component-inventory',
+    jtbd: 'Job 2 — Stop flying blind on technology risk',
+  },
+  erptransformation: {
+    id: 'erptransformation',
+    icon: '🚀',
+    title: 'Define transformation scope and sequence',
+    jobStatement: 'Show the CFO and programme sponsor what is in scope for the transformation, what the dependencies are, and what a realistic migration sequence looks like.',
+    audience: 'CFO, Programme Sponsor, SAP Partner',
+    timeToResult: '4–8 hours of data entry',
+    targetReport: 'Transformation Roadmap',
+    targetReportDesc: 'Applications classified by TIME model, grouped into migration waves, with ERP dependency map.',
+    targetReportUrl: 'https://help.sap.com/docs/leanix/ea/roadmap-report',
+    jtbd: 'Job 3 — Define the scope of a transformation without guessing',
+  },
+};
+
+// ── Gap rule chains per intent ────────────────────────────────────────────
+const RULES = {
+  rationalization: [
+    {
+      id: 'r1',
+      active: (w) => w.appCount === 0,
+      done: (w) => w.appCount > 0,
+      title: 'Import your applications',
+      whyNeeded: 'Without this, your Portfolio Matrix has nothing to show the steering committee.',
+      timeEstimate: '30–60 min for a first list of 20–50 apps',
+      count: (w) => null,
+      countLabel: null,
+      context: 'Even a rough list of 20–30 applications is enough to get started. You can enrich the data later — the goal right now is to have something in the workspace.',
+      actionLabel: 'Import applications',
+      actionHint: 'Opens Inventory Tools → Excel import',
+      doc: {
+        title: 'Importing applications via Excel',
+        why: 'The fastest way to bring in a bulk list is the Excel import — no manual entry needed.',
+        steps: [
+          'Go to Inventory → Inventory Tools → Import',
+          'Download the Application import template',
+          'Fill in: Name, Lifecycle status, Owner (min. 3 columns)',
+          'Upload the file and review the preview',
+          'Confirm import — applications appear immediately',
+        ],
+        link: 'https://help.sap.com/docs/leanix/ea/importing-fact-sheet-data-through-excel-file',
+        linkTitle: 'Full import guide →',
+      },
+    },
+    {
+      id: 'r2',
+      active: (w) => w.appCount > 0 && w.bcCount === 0,
+      done: (w) => w.bcCount > 0,
+      title: 'Set up business capabilities',
+      whyNeeded: 'The Matrix axes are business capabilities — without them, the report is a flat list, not a map.',
+      timeEstimate: '20–30 min using the SAP reference catalog',
+      count: (w) => null,
+      context: 'Business capabilities are the axes of the Portfolio Matrix. Without them, you can\'t see which apps support which functions.',
+      actionLabel: 'Set up business capabilities',
+      actionHint: 'Opens Reference Catalog → BC import',
+      doc: {
+        title: '3 ways to build your BC model',
+        why: 'Most customers start with the SAP Reference Catalog — it\'s a pre-built L1/L2 model you can adapt in minutes.',
+        steps: [
+          'Option 1 (recommended): Open the Reference Catalog and import the SAP BC model',
+          'Option 2: Import your own BC hierarchy via Excel',
+          'Option 3: Create BCs manually in Inventory → Business Capability',
+          'Aim for 7–20 Level 1 capabilities to start — you can expand later',
+          'Add short descriptions so others understand the scope of each capability',
+        ],
+        link: 'https://help.sap.com/docs/leanix/ea/business-capabilities-in-reference-catalog',
+        linkTitle: 'BC Reference Catalog guide →',
+        link2: 'https://help.sap.com/docs/leanix/ea/business-capability-modeling-guidelines',
+        link2Title: 'BC Modeling Guidelines →',
+      },
+    },
+    {
+      id: 'r3',
+      active: (w) => w.appCount > 0 && w.bcCount > 0 && w.relCount === 0,
+      done: (w) => w.relCount > 0,
+      title: 'Link applications to capabilities',
+      whyNeeded: 'The Matrix is empty until apps are connected to BCs — this is the step that makes the picture visible.',
+      timeEstimate: '1–2 hours for 30–50 apps (faster with bulk import)',
+      count: (w) => w.appCount > 0 ? `${w.appCount} apps unlinked` : null,
+      context: 'Linking apps to BCs is what populates the Matrix. Without relations, the report is empty.',
+      actionLabel: 'Link apps to capabilities',
+      actionHint: 'Opens bulk relation import',
+      doc: {
+        title: 'Linking applications to business capabilities',
+        why: 'For 10+ apps, use the bulk import — it\'s far faster than editing each fact sheet manually.',
+        steps: [
+          'Open any Application fact sheet',
+          'Go to the Relations tab',
+          'Click + Add → select the matching Business Capability',
+          'For bulk linking: use Excel import with a "sourceId/targetId" column',
+          'The Matrix report updates in real time as you add relations',
+        ],
+        link: 'https://help.sap.com/docs/leanix/ea/bulk-updating-data-in-inventory-table-view',
+        linkTitle: 'Bulk update guide →',
+      },
+    },
+    {
+      id: 'r4',
+      active: (w) => w.appCount > 0 && w.bcCount > 0 && w.relCount > 0 && w.functFitPct < 50,
+      done: (w) => w.functFitPct >= 50,
+      title: 'Add functional fit & criticality',
+      whyNeeded: 'This is the color-coding — without it, the Matrix shows structure but not the rationalization signal.',
+      timeEstimate: '1–3 days via survey (owners fill it, not you)',
+      count: (w) => w.appCount > 0 ? `${Math.round(w.appCount * (100 - w.functFitPct) / 100)} apps missing` : null,
+      context: 'Functional fit and business criticality are what let you color the Matrix by performance — the rationalization picture only becomes clear once these are filled.',
+      actionLabel: 'Send data quality survey',
+      actionHint: 'Opens Survey → send to app owners',
+      doc: {
+        title: 'Collecting functional fit via survey',
+        why: 'The fastest way is a survey sent to application owners — they fill it in directly without accessing the workspace.',
+        steps: [
+          'Go to More → Surveys → Create Survey',
+          'Select "Functional Fit" and "Business Criticality" as target fields',
+          'Choose your audience: application owners or specific users',
+          'Send — owners receive an email with a direct link to respond',
+          'Responses update fact sheets automatically as they come in',
+        ],
+        link: 'https://help.sap.com/docs/leanix/ea/creating-survey',
+        linkTitle: 'Survey setup guide →',
+      },
+    },
+    {
+      id: 'r5',
+      active: (w) => w.appCount > 0 && w.bcCount > 0 && w.relCount > 0 && w.functFitPct >= 50,
+      done: (w) => false,
+      title: 'Open your Portfolio Matrix',
+      isFinish: true,
+      context: 'You\'re ready. Your rationalization candidates are now visible.',
+      actionLabel: 'Open Portfolio Matrix',
+      actionHint: 'Reports → Portfolio Matrix',
+      doc: null,
+    },
+  ],
+  aigovernance: [
+    {
+      id: 'a1',
+      active: (w) => w.appCount === 0,
+      done: (w) => w.appCount > 0,
+      title: 'Import your applications',
+      context: 'Start with the applications that use AI tools or third-party SaaS — these are your highest-risk entries.',
+      actionLabel: 'Import applications',
+      actionHint: 'Opens Inventory Tools → Excel import',
+      doc: {
+        title: 'Importing applications via Excel',
+        why: 'A 20-entry list is enough to start your AI governance map. You can add more incrementally.',
+        steps: [
+          'Go to Inventory → Inventory Tools → Import',
+          'Download the Application import template',
+          'Fill in: Name, Lifecycle status, Owner',
+          'Upload and confirm',
+          'Focus first on apps that use AI tools, cloud platforms, or SaaS vendors',
+        ],
+        link: 'https://help.sap.com/docs/leanix/ea/importing-fact-sheet-data-through-excel-file',
+        linkTitle: 'Full import guide →',
+      },
+    },
+    {
+      id: 'a2',
+      active: (w) => w.appCount > 0 && w.itcCount === 0,
+      done: (w) => w.itcCount > 0,
+      title: 'Add your IT components & AI tools',
+      whyNeeded: 'IT components — especially AI tools and SaaS — are what the governance map is actually about.',
+      timeEstimate: '1–2 hours for a first inventory of key tools',
+      context: 'IT Components are the technology behind your applications — databases, AI models, cloud services. This is where your governance view lives.',
+      actionLabel: 'Add IT components',
+      actionHint: 'Opens Inventory → New Fact Sheet → IT Component',
+      doc: {
+        title: 'Application vs IT Component — the key distinction',
+        why: 'An Application is what users interact with. An IT Component is the technology it runs on. One app can use many IT components — including AI models.',
+        steps: [
+          'Go to Inventory → New Fact Sheet → IT Component',
+          'Set Tech Category: AI, Cloud Native, SaaS, On-Premise, or Open Source',
+          'Set the vendor and product name (e.g. "OpenAI GPT-4", "AWS Bedrock")',
+          'Set lifecycle dates — especially End of Maintenance / End of Life',
+          'Link to the application that uses it via the Relations tab',
+        ],
+        link: 'https://help.sap.com/docs/leanix/ea/getting-started-building-your-it-component-inventory',
+        linkTitle: 'IT Component inventory guide →',
+      },
+    },
+    {
+      id: 'a3',
+      active: (w) => w.appCount > 0 && w.itcCount > 0 && w.relCount === 0,
+      done: (w) => w.relCount > 0,
+      title: 'Link apps to their technology',
+      whyNeeded: 'Without this link, you can\'t answer "which team uses this AI tool" — it\'s two disconnected lists.',
+      timeEstimate: '1–2 hours for 20–40 applications',
+      count: (w) => w.appCount > 0 ? `${w.appCount} apps unlinked` : null,
+      context: 'Connecting apps to IT components is what lets you trace AI tool usage back to the owning team.',
+      actionLabel: 'Link apps to IT components',
+      actionHint: 'Relations tab on each Application fact sheet',
+      doc: {
+        title: 'Linking applications to IT components',
+        why: 'The "uses" relation maps an application to its technology stack. Each link becomes a node in your governance view.',
+        steps: [
+          'Open an Application fact sheet',
+          'Go to Relations → Technical Stack',
+          'Click + Add → select the IT Component',
+          'Repeat for each AI tool or cloud service used',
+          'For bulk: use the Excel import with sourceId/targetId',
+        ],
+        link: 'https://help.sap.com/docs/leanix/ea/bulk-updating-data-in-inventory-table-view',
+        linkTitle: 'Bulk relation import →',
+      },
+    },
+    {
+      id: 'a4',
+      active: (w) => w.appCount > 0 && w.itcCount > 0 && w.relCount > 0,
+      done: (w) => false,
+      title: 'Open Technology Landscape',
+      isFinish: true,
+      context: 'Your AI governance view is ready. See which tools are in use — and which are nearing end of life.',
+      actionLabel: 'Open Technology Landscape',
+      actionHint: 'Reports → IT Component Landscape',
+      doc: null,
+    },
+  ],
+  erptransformation: [
+    {
+      id: 'e1',
+      active: (w) => w.appCount === 0,
+      done: (w) => w.appCount > 0,
+      title: 'Import your application landscape',
+      context: 'Focus first on applications connected to your current ERP — SAP ECC, S/4HANA, core finance, HR, and supply chain.',
+      actionLabel: 'Import applications',
+      actionHint: 'Opens Inventory Tools → Excel import',
+      doc: {
+        title: 'Importing the ERP landscape',
+        why: 'A scoped import of 30–50 ERP-adjacent applications is enough to start your transformation scope definition.',
+        steps: [
+          'Go to Inventory → Inventory Tools → Import',
+          'Download the Application import template',
+          'Fill in: Name, Lifecycle, Owner, and a "ERP_connected" tag in the description',
+          'Upload and confirm',
+          'Include your current ERP system itself as an application fact sheet',
+        ],
+        link: 'https://help.sap.com/docs/leanix/ea/importing-fact-sheet-data-through-excel-file',
+        linkTitle: 'Full import guide →',
+      },
+    },
+    {
+      id: 'e2',
+      active: (w) => w.appCount > 0 && w.timePct < 30,
+      done: (w) => w.timePct >= 30,
+      title: 'Apply the TIME model',
+      whyNeeded: 'TIME classification is what turns your application list into a transformation scope the CFO can approve.',
+      timeEstimate: '2–4 hours for first 30% of the portfolio',
+      count: (w) => w.appCount > 0 ? `${Math.round(w.appCount * (100 - w.timePct) / 100)} apps unclassified` : null,
+      context: 'TIME is the foundation of your transformation scope. Classify at least your most critical 30% to see the shape of the migration.',
+      actionLabel: 'Classify with TIME',
+      actionHint: 'Inventory → Bulk edit → TIME field',
+      doc: {
+        title: 'The Gartner® TIME model in 2 minutes',
+        why: 'TIME classifies every application into one of four buckets that directly drive your roadmap.',
+        steps: [
+          'T — Tolerate: keep for now, low strategic value, no investment',
+          'I — Invest: strategic, enhance and grow',
+          'M — Migrate: move to a new platform (e.g. S/4HANA)',
+          'E — Eliminate: retire, no replacement needed',
+          'Start with your top 20 most critical apps — get the shape right before filling in the rest',
+        ],
+        link: 'https://help.sap.com/docs/leanix/ea/time',
+        linkTitle: 'TIME framework guide →',
+        link2: 'https://help.sap.com/docs/leanix/ea/application-rationalization',
+        link2Title: 'Application Rationalization overview →',
+      },
+    },
+    {
+      id: 'e3',
+      active: (w) => w.appCount > 0 && w.timePct >= 30 && w.ifaceCount === 0,
+      done: (w) => w.ifaceCount > 0,
+      title: 'Document ERP interfaces',
+      whyNeeded: 'Dependencies are what make transformation sequences realistic — without them, the roadmap is just a guess.',
+      timeEstimate: '2–3 hours for the most critical integrations',
+      context: 'ERP interfaces are the dependencies that determine migration complexity. You need to know what connects to what before you can build a realistic roadmap.',
+      actionLabel: 'Add interfaces',
+      actionHint: 'Inventory → New Fact Sheet → Interface',
+      doc: {
+        title: 'Modeling ERP interfaces in LeanIX',
+        why: 'Each interface represents a data flow between two systems. Together they form your integration map — the basis for migration wave planning.',
+        steps: [
+          'Go to Inventory → New Fact Sheet → Interface',
+          'Name it by its two systems (e.g. "ECC ↔ CRM – Order data")',
+          'Set type: API, File Transfer, Database, or Messaging',
+          'Set direction: inbound, outbound, or bidirectional',
+          'Link to the source and target Application fact sheets in Relations',
+        ],
+        link: 'https://help.sap.com/docs/leanix/ea/interface-modeling-guidelines',
+        linkTitle: 'Interface modeling guidelines →',
+      },
+    },
+    {
+      id: 'e4',
+      active: (w) => w.appCount > 0 && w.timePct >= 30 && w.ifaceCount > 0,
+      done: (w) => false,
+      title: 'Create transformation initiative & roadmap',
+      isFinish: true,
+      context: 'Your transformation scope is visible. Create an initiative to turn the TIME classification into a real roadmap.',
+      actionLabel: 'Create initiative + open Roadmap',
+      actionHint: 'Inventory → New Fact Sheet → Initiative',
+      doc: {
+        title: 'Setting up a transformation initiative',
+        why: 'An Initiative fact sheet is the container that groups your Migrate + Eliminate apps into a phased plan. The Roadmap report reads from it automatically.',
+        steps: [
+          'Go to Inventory → New Fact Sheet → Initiative',
+          'Set type: Transformation',
+          'Set the timeline: planned start + target go-live',
+          'Link your "Migrate" and "Eliminate" apps to the initiative in Relations',
+          'Open Reports → Roadmap to see the auto-generated plan',
+        ],
+        link: 'https://help.sap.com/docs/leanix/ea/roadmap-report',
+        linkTitle: 'Roadmap report guide →',
+        link2: 'https://help.sap.com/docs/leanix/ea/application-rationalization-create-roadmap',
+        link2Title: 'Step-by-step: Create a rationalization roadmap →',
+      },
+    },
+  ],
+};
+
+// ── Cross-intent nudges ───────────────────────────────────────────────────
+function getCrossIntentNudges(w) {
+  const nudges = [];
+  if (w.userCount <= 1) {
+    nudges.push({
+      id: 'n-team',
+      icon: '👥',
+      text: 'Your workspace has only 1 user. Invite your core team (2–5 people) to share data entry.',
+      actionLabel: 'Set up SSO or invite users',
+      actionUrl: 'https://help.sap.com/docs/leanix/ea/sso-configuration-process',
+    });
+  }
+  if (w.appCount > 10 && w.ownersPct < 30) {
+    nudges.push({
+      id: 'n-owners',
+      icon: '📋',
+      text: 'Most applications have no owner assigned. Without owners, data quality stalls.',
+      actionLabel: 'Learn about subscription roles',
+      actionUrl: 'https://help.sap.com/docs/leanix/ea/subscription-roles',
+    });
+  }
+  if (w.daysSinceStart > 14 && getProgress() < 25) {
+    nudges.push({
+      id: 'n-stuck',
+      icon: '🙋',
+      text: 'Looks like you\'re working through a blocker. Book a 30-min session with the onboarding team.',
+      actionLabel: 'Book a session',
+      actionUrl: 'https://support.sap.com/en/product/onboarding-resource-center/leanix.html',
+    });
+  }
+  return nudges;
+}
+
+// ── Progress calculation ──────────────────────────────────────────────────
+function getProgress() {
+  if (!selectedIntent) return 0;
+  const rules = RULES[selectedIntent];
+  const total = rules.length;
+  const completed = rules.filter(r => r.done(ws)).length;
+  return Math.round((completed / total) * 100);
+}
+
+// ── Panel toggle ─────────────────────────────────────────────────────────
+function togglePanel() {
+  panelOpen = !panelOpen;
+  document.getElementById('guide-panel').classList.toggle('hidden', !panelOpen);
+}
+
+// ── Toggle step body ──────────────────────────────────────────────────────
+function toggleStep(id) {
+  const body = document.getElementById('body-' + id);
+  const chevron = document.getElementById('chev-' + id);
+  if (!body) return;
+  const isOpen = body.classList.contains('open');
+  // close all
+  document.querySelectorAll('.step-body').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.step-chevron').forEach(c => c.classList.remove('open'));
+  if (!isOpen) {
+    body.classList.add('open');
+    chevron.classList.add('open');
+  }
+}
+
+// ── Select intent ────────────────────────────────────────────────────────
+function selectIntent(id) {
+  selectedIntent = id;
+  renderPanel();
+}
+
+// ── Apply demo controls ───────────────────────────────────────────────────
+function applyControls() {
+  ws.appCount = parseInt(document.getElementById('ctrl-apps').value) || 0;
+  ws.bcCount = parseInt(document.getElementById('ctrl-bcs').value) || 0;
+  ws.relCount = parseInt(document.getElementById('ctrl-rel').value) || 0;
+  ws.itcCount = parseInt(document.getElementById('ctrl-itc').value) || 0;
+  ws.ifaceCount = parseInt(document.getElementById('ctrl-iface').value) || 0;
+  ws.userCount = parseInt(document.getElementById('ctrl-users').value) || 1;
+  ws.functFitPct = parseInt(document.getElementById('ctrl-ff').value) || 0;
+  ws.ownersPct = parseInt(document.getElementById('ctrl-owners').value) || 0;
+  ws.timePct = parseInt(document.getElementById('ctrl-time').value) || 0;
+  ws.daysSinceStart = parseInt(document.getElementById('ctrl-days').value) || 1;
+  renderPanel();
+}
+
+// ── Render panel ──────────────────────────────────────────────────────────
+function renderPanel() {
+  const body = document.getElementById('panel-body');
+  const titleEl = document.getElementById('panel-title');
+  const subtitleEl = document.getElementById('panel-subtitle');
+
+  if (!selectedIntent) {
+    titleEl.textContent = 'Getting Started';
+    subtitleEl.textContent = 'Tell us what you need to show';
+    body.innerHTML = renderSurvey();
+    return;
+  }
+
+  const intent = INTENTS[selectedIntent];
+  const rules = RULES[selectedIntent];
+  const progress = getProgress();
+  const currentRule = rules.find(r => r.active(ws));
+  const allDone = rules.every(r => r.done(ws)) || (currentRule && currentRule.isFinish);
+  const remainingSteps = rules.filter(r => !r.done(ws) && !r.isFinish).length;
+
+  titleEl.textContent = intent.title;
+  subtitleEl.textContent = progress > 0
+    ? `${remainingSteps} step${remainingSteps !== 1 ? 's' : ''} to your first result`
+    : `~${intent.timeToResult} to first result`;
+
+  let html = '';
+
+  // Progress bar
+  html += `
+    <div id="progress-section">
+      <div class="progress-label">
+        <span>Distance to <strong>${intent.targetReport}</strong></span>
+        <span>${progress}%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div>
+    </div>`;
+
+  // Target deliverable card
+  html += `
+    <div class="target-report">
+      <strong>Your deliverable → ${intent.targetReport}</strong>
+      ${intent.targetReportDesc}
+      <div style="margin-top:6px; font-size:11px; color:#556b82;">
+        👤 Share with: ${intent.audience}
+      </div>
+    </div>`;
+
+  // Cross-intent nudges
+  getCrossIntentNudges(ws).forEach(n => {
+    html += `
+      <div class="nudge">
+        <span class="nudge-icon">${n.icon}</span>
+        <div class="nudge-text">${n.text}
+          <br><a href="${n.actionUrl}" target="_blank" class="nudge-action">${n.actionLabel} ↗</a>
+        </div>
+      </div>`;
+  });
+
+  if (allDone && !currentRule) {
+    html += `
+      <div class="completed-state">
+        <div class="big-check">✅</div>
+        <h3>Your ${intent.targetReport} is ready</h3>
+        <p>You now have enough data to generate your first result and share it with ${intent.audience}.</p>
+        <a href="${intent.targetReportUrl}" target="_blank" class="open-report-btn">Open ${intent.targetReport} ↗</a>
+        <div class="ai-upsell">
+          <strong>Next:</strong> Once you've reviewed the report, the <strong>EA Assistant</strong> can answer follow-up questions from stakeholders in natural language. (Requires AI terms + AI Units)
+        </div>
+      </div>`;
+  } else {
+    rules.forEach((rule, i) => {
+      const isDone = rule.done(ws);
+      const isActive = rule.active(ws);
+      const statusClass = isDone ? 'complete' : isActive ? 'current' : 'locked';
+      const statusLabel = isDone ? '✓' : isActive ? (i + 1) : '·';
+      const stepClass = isDone ? 'done' : isActive ? 'active' : 'blocked';
+      const countText = rule.count ? rule.count(ws) : null;
+      const autoOpen = isActive;
+
+      html += `
+        <div class="gap-step ${stepClass}">
+          <div class="step-header" onclick="toggleStep('${rule.id}')">
+            <div class="step-status ${statusClass}">${statusLabel}</div>
+            <div class="step-title-block">
+              <div class="step-title">${rule.title}</div>
+              ${rule.whyNeeded && isActive ? `<div class="step-why">${rule.whyNeeded}</div>` : ''}
+            </div>
+            ${countText ? `<div class="step-count">${countText}</div>` : ''}
+            <div class="step-chevron ${autoOpen ? 'open' : ''}" id="chev-${rule.id}">▶</div>
+          </div>
+          <div class="step-body ${autoOpen ? 'open' : ''}" id="body-${rule.id}">
+            <div class="step-context">${rule.context}</div>
+            ${rule.timeEstimate ? `<div class="step-time">⏱ About ${rule.timeEstimate}</div>` : ''}
+            ${rule.isFinish
+              ? `<a href="${intent.targetReportUrl}" target="_blank" class="step-action">${rule.actionLabel} ↗</a>`
+              : `<button class="step-action" onclick="alert('In the real product, this opens ${rule.actionHint}.')">${rule.actionLabel}</button>`
+            }
+            ${rule.doc ? `
+              <div class="inline-doc">
+                <div class="doc-title">${rule.doc.title}</div>
+                <div class="doc-why">${rule.doc.why}</div>
+                <ol>${rule.doc.steps.map(s => `<li>${s}</li>`).join('')}</ol>
+                <a href="${rule.doc.link}" target="_blank" class="doc-link">📄 ${rule.doc.linkTitle}</a>
+                ${rule.doc.link2 ? `<br><a href="${rule.doc.link2}" target="_blank" class="doc-link">📄 ${rule.doc.link2Title}</a>` : ''}
+              </div>` : ''}
+          </div>
+        </div>`;
+    });
+
+    if (ws.daysSinceStart > 14 && progress < 50) {
+      html += `
+        <div class="book-session">
+          Working through a blocker? The onboarding team can join you for a focused 30-min session on exactly this step.
+          <br><a href="https://support.sap.com/en/product/onboarding-resource-center/leanix.html" target="_blank">Book a session →</a>
+        </div>`;
+    }
+  }
+
+  html += `<div style="text-align:center; margin-top:16px;">
+    <a href="#" onclick="selectedIntent=null; renderPanel(); return false;" style="font-size:11px; color:#556b82;">
+      ← Change my goal
+    </a>
+  </div>`;
+
+  body.innerHTML = html;
+}
+
+// ── Render intent survey ──────────────────────────────────────────────────
+function renderSurvey() {
+  let html = `
+    <p class="intent-q">What do you need to show — and to whom?</p>
+    <p class="intent-q-sub">We'll reverse-engineer exactly what data you need and how far you are from your first result.</p>`;
+
+  Object.values(INTENTS).forEach(intent => {
+    html += `
+      <div class="intent-card" onclick="selectIntent('${intent.id}')">
+        <div class="ic-icon">${intent.icon}</div>
+        <div>
+          <div class="ic-title">${intent.title}</div>
+          <div class="ic-desc">${intent.jobStatement}</div>
+          <div class="ic-meta">
+            <span>👤 ${intent.audience}</span>
+            <span>⏱ ${intent.timeToResult}</span>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  return html;
+}
+
+// ── Active tab ───────────────────────────────────────────────────────────
+let activeTab = 'journey';
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'journey') renderPanel();
+  else renderFsGuides();
+}
+
+// ── Screen mock data per step ─────────────────────────────────────────────
+const SCREEN_MOCKS = {
+  // No intent selected
+  null: () => `
+    <div style="padding:28px 0 8px; text-align:center;">
+      <div style="font-size:32px; margin-bottom:12px;">👋</div>
+      <div style="font-size:18px; font-weight:700; color:#1d2d3e; margin-bottom:6px;">Welcome to SAP LeanIX</div>
+      <div style="font-size:13px; color:#556b82; max-width:380px; margin:0 auto 20px; line-height:1.6;">
+        Your workspace is ready. Use the <strong>Getting Started</strong> guide on the right to tell us what you need to achieve — we'll show you exactly what to do next.
+      </div>
+      <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+        <div style="background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:16px 20px;min-width:150px;text-align:center;">
+          <div style="font-size:24px;margin-bottom:6px;">0</div>
+          <div style="font-size:12px;color:#556b82;">Applications</div>
+        </div>
+        <div style="background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:16px 20px;min-width:150px;text-align:center;">
+          <div style="font-size:24px;margin-bottom:6px;">0</div>
+          <div style="font-size:12px;color:#556b82;">Business Capabilities</div>
+        </div>
+        <div style="background:#fff;border:1px solid #e8e8e8;border-radius:8px;padding:16px 20px;min-width:150px;text-align:center;">
+          <div style="font-size:24px;margin-bottom:6px;">0</div>
+          <div style="font-size:12px;color:#556b82;">Organizations</div>
+        </div>
+      </div>
+    </div>`,
+
+  r1: () => `
+    <div class="screen-mock">
+      <div class="mock-bar">
+        <span class="mock-breadcrumb">Inventory</span>
+        <span style="color:#d9d9d9">›</span>
+        <span>All Fact Sheets</span>
+        <div style="margin-left:auto; display:flex; gap:6px;">
+          <div class="mock-btn secondary">+ New Fact Sheet</div>
+          <div class="callout-wrap">
+            <div class="mock-btn primary mock-interactive" data-tip="inv-tools">Inventory Tools ▾</div>
+            <div class="callout-pulse" style="top:-4px;left:-4px;right:-4px;bottom:-4px;border-radius:6px;"></div>
+            <div class="callout-label" style="top:-28px;left:50%;transform:translateX(-50%);">👆 Click here</div>
+          </div>
+        </div>
+      </div>
+      <div class="mock-body">
+        <div class="mock-context-header">
+          <span class="mch-step">Step 1</span>
+          <span class="mch-text">Go to Inventory → Inventory Tools → Import</span>
+        </div>
+        <div class="mock-section-title">Import options</div>
+        <div class="mock-row">
+          <div class="callout-wrap">
+            <div class="mock-chip highlight mock-interactive" data-tip="import-excel">📥 Import from Excel</div>
+            <div class="callout-pulse" style="top:-3px;left:-3px;right:-3px;bottom:-3px;border-radius:5px;"></div>
+          </div>
+          <div class="mock-chip mock-interactive" data-tip="connect-integration">🔗 Connect Integration</div>
+          <div class="mock-chip mock-interactive" data-tip="inv-tools">📋 Copy from Template</div>
+        </div>
+        <div style="margin-top:14px; padding:12px; background:#f0f7fe; border-radius:6px; font-size:12px; color:#1d2d3e;">
+          <strong>Tip:</strong> Download the Excel template, fill in Name + Lifecycle + Owner for each application, then re-upload. A list of 20–30 apps takes about 30 minutes.
+        </div>
+      </div>
+    </div>`,
+
+  r2: () => `
+    <div class="screen-mock">
+      <div class="mock-bar">
+        <span class="mock-breadcrumb">Inventory</span>
+        <span style="color:#d9d9d9">›</span>
+        <span>All Fact Sheets</span>
+      </div>
+      <div class="mock-body" style="display:flex; gap:14px;">
+        <div style="width:160px; flex-shrink:0;">
+          <div class="mock-section-title">Type</div>
+          <div class="mock-sidebar">
+            <div class="mock-sidebar-item mock-interactive" data-tip="import-excel"><div class="ms-dot" style="background:#1b6dd2;"></div> Application <span style="margin-left:auto;font-size:11px;color:#888;">${ws.appCount}</span></div>
+            <div class="mock-sidebar-item active callout-wrap mock-interactive" data-tip="bc-sidebar">
+              <div class="ms-dot" style="background:#3fc380;"></div> Business Capability
+              <div class="callout-pulse" style="top:-3px;left:-3px;right:-3px;bottom:-3px;border-radius:5px;"></div>
+            </div>
+            <div class="mock-sidebar-item mock-interactive" data-tip="bc-sidebar"><div class="ms-dot" style="background:#e67e22;"></div> Organization</div>
+          </div>
+        </div>
+        <div style="flex:1;">
+          <div class="mock-context-header">
+            <span class="mch-step">Step 2</span>
+            <span class="mch-text">Select Business Capability in the sidebar, then use the Reference Catalog</span>
+          </div>
+          <div class="mock-btn primary mock-interactive" data-tip="ref-catalog" style="margin-bottom:10px;">📚 Open Reference Catalog</div>
+          <div style="font-size:12px; color:#556b82; background:#f8f9fa; padding:10px; border-radius:6px; line-height:1.6;">
+            The Reference Catalog has a pre-built SAP capability model with L1 + L2 levels. Import it as a starting point — you can rename or reorganise capabilities later.
+          </div>
+        </div>
+      </div>
+    </div>`,
+
+  r3: () => `
+    <div class="screen-mock">
+      <div class="mock-bar">
+        <span class="mock-breadcrumb">Inventory</span>
+        <span style="color:#d9d9d9">›</span>
+        <span>SAP CRM</span>
+        <span style="color:#d9d9d9">›</span>
+        <span class="mock-tab">Overview</span>
+        <div class="callout-wrap">
+          <span class="mock-tab active mock-interactive" data-tip="relations-tab" style="color:#0a6ed1;">Relations</span>
+          <div class="callout-pulse" style="top:-3px;left:-3px;right:-3px;bottom:-3px;border-radius:5px;"></div>
+          <div class="callout-label" style="top:-28px;left:50%;transform:translateX(-50%);">👆 Relations tab</div>
+        </div>
+      </div>
+      <div class="mock-body">
+        <div class="mock-context-header">
+          <span class="mch-step">Step 3</span>
+          <span class="mch-text">Open any Application → Relations tab → link to Business Capability</span>
+        </div>
+        <div class="mock-section-title">Business Capabilities supported by this app</div>
+        <div class="mock-interactive" data-tip="add-bc-rel" style="border:1.5px dashed #0a6ed1; border-radius:6px; padding:12px; text-align:center; color:#0a6ed1; font-size:12px;">
+          + Add Business Capability relation
+        </div>
+        <div style="margin-top:10px; font-size:12px; color:#556b82;">
+          For bulk linking of 10+ applications, use <span class="mock-interactive" data-tip="inv-tools" style="color:#0a6ed1; font-weight:600; cursor:pointer;">Inventory Tools → Import</span> with a sourceId/targetId column.
+        </div>
+      </div>
+    </div>`,
+
+  r4: () => `
+    <div class="screen-mock">
+      <div class="mock-bar">
+        <span class="mock-breadcrumb mock-interactive" data-tip="surveys-nav" style="cursor:pointer;">More ▾</span>
+        <span style="color:#d9d9d9">›</span>
+        <div class="callout-wrap">
+          <span class="mock-breadcrumb mock-interactive" data-tip="surveys-nav">Surveys</span>
+          <div class="callout-pulse" style="top:-3px;left:-3px;right:-3px;bottom:-3px;border-radius:5px;"></div>
+          <div class="callout-label" style="top:-28px;left:50%;transform:translateX(-50%);">👆 More → Surveys</div>
+        </div>
+      </div>
+      <div class="mock-body">
+        <div class="mock-context-header">
+          <span class="mch-step">Step 4</span>
+          <span class="mch-text">Create a survey to collect Functional Fit + Business Criticality from app owners</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div class="mock-list-item mock-interactive" data-tip="survey-field-ff">
+            <div class="mli-icon">?</div>
+            <div style="flex:1;">
+              <div style="font-size:12px; font-weight:600; color:#1d2d3e;">Functional Fit</div>
+              <div style="font-size:11px; color:#556b82;">How well does this app support the business function?</div>
+            </div>
+            <div class="mock-chip highlight">Include ✓</div>
+          </div>
+          <div class="mock-list-item mock-interactive" data-tip="survey-field-bc">
+            <div class="mli-icon">★</div>
+            <div style="flex:1;">
+              <div style="font-size:12px; font-weight:600; color:#1d2d3e;">Business Criticality</div>
+              <div style="font-size:11px; color:#556b82;">How critical is this app to daily operations?</div>
+            </div>
+            <div class="mock-chip highlight">Include ✓</div>
+          </div>
+        </div>
+        <div style="margin-top:10px; padding:10px; background:#f0f7fe; border-radius:6px; font-size:12px; color:#1d2d3e;">
+          Owners receive an email link. They don't need to log in to LeanIX. Responses update fact sheets automatically.
+        </div>
+      </div>
+    </div>`,
+
+  a1: () => SCREEN_MOCKS.r1(),
+
+  a2: () => `
+    <div class="screen-mock">
+      <div class="mock-bar">
+        <span class="mock-breadcrumb">Inventory</span>
+        <span style="color:#d9d9d9">›</span>
+        <span>+ New Fact Sheet</span>
+      </div>
+      <div class="mock-body">
+        <div class="mock-context-header">
+          <span class="mch-step">Step 2</span>
+          <span class="mch-text">Inventory → New Fact Sheet → IT Component</span>
+        </div>
+        <div class="mock-section-title">Choose fact sheet type</div>
+        <div class="mock-row">
+          <div class="mock-chip mock-interactive" data-tip="import-excel">Application</div>
+          <div class="mock-chip mock-interactive" data-tip="bc-sidebar">Business Capability</div>
+          <div class="callout-wrap">
+            <div class="mock-chip highlight mock-interactive" data-tip="new-itc">IT Component</div>
+            <div class="callout-pulse" style="top:-3px;left:-3px;right:-3px;bottom:-3px;border-radius:5px;"></div>
+            <div class="callout-label" style="top:-28px;left:0;">👆 Select this</div>
+          </div>
+          <div class="mock-chip">Organization</div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="mock-section-title">Set Tech Category</div>
+          <div class="mock-row">
+            <div class="mock-chip highlight mock-interactive" data-tip="tech-cat-ai">AI / ML</div>
+            <div class="mock-chip mock-interactive" data-tip="new-itc">Cloud Native</div>
+            <div class="mock-chip mock-interactive" data-tip="new-itc">SaaS</div>
+            <div class="mock-chip mock-interactive" data-tip="new-itc">On-Premise</div>
+          </div>
+        </div>
+        <div style="margin-top:8px; font-size:12px; color:#556b82; background:#f8f9fa; padding:10px; border-radius:6px;">
+          Set the <strong>End of Life date</strong> field — this is what the technology risk report is built on.
+        </div>
+      </div>
+    </div>`,
+
+  a3: () => SCREEN_MOCKS.r3(),
+
+  e1: () => SCREEN_MOCKS.r1(),
+
+  e2: () => `
+    <div class="screen-mock">
+      <div class="mock-bar">
+        <span class="mock-breadcrumb">Inventory</span>
+        <span style="color:#d9d9d9">›</span>
+        <span>Applications</span>
+        <div style="margin-left:auto;">
+          <div class="callout-wrap">
+            <div class="mock-btn secondary mock-interactive" data-tip="time-bulk">Bulk Edit</div>
+            <div class="callout-pulse" style="top:-4px;left:-4px;right:-4px;bottom:-4px;border-radius:6px;"></div>
+            <div class="callout-label" style="top:-28px;right:0;">👆 Bulk Edit</div>
+          </div>
+        </div>
+      </div>
+      <div class="mock-body">
+        <div class="mock-context-header">
+          <span class="mch-step">Step 2</span>
+          <span class="mch-text">Inventory → Applications → Bulk Edit → TIME Classification field</span>
+        </div>
+        <div class="mock-section-title">TIME Classification</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          ${[['T','Tolerate','#556b82','#f0f0f0','time-t'],['I','Invest','#188918','#e8f5e8','time-i'],['M','Migrate','#0a6ed1','#e8f3fd','time-m'],['E','Eliminate','#bb0000','#fce8e8','time-e']].map(([letter,label,color,bg,tipKey])=>`
+            <div class="mock-interactive" data-tip="${tipKey}" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:5px;background:${bg};font-size:12px;">
+              <div style="width:22px;height:22px;border-radius:4px;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;flex-shrink:0;">${letter}</div>
+              <strong style="color:${color};">${label}</strong>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`,
+
+  e3: () => `
+    <div class="screen-mock">
+      <div class="mock-bar">
+        <span class="mock-breadcrumb">Inventory</span>
+        <span style="color:#d9d9d9">›</span>
+        <span>+ New Fact Sheet</span>
+      </div>
+      <div class="mock-body">
+        <div class="mock-context-header">
+          <span class="mch-step">Step 3</span>
+          <span class="mch-text">Inventory → New Fact Sheet → Interface</span>
+        </div>
+        <div class="mock-row">
+          <div class="mock-chip mock-interactive" data-tip="import-excel">Application</div>
+          <div class="callout-wrap">
+            <div class="mock-chip highlight mock-interactive" data-tip="new-interface">Interface</div>
+            <div class="callout-pulse" style="top:-3px;left:-3px;right:-3px;bottom:-3px;border-radius:5px;"></div>
+            <div class="callout-label" style="top:-28px;left:0;">👆 Select this</div>
+          </div>
+          <div class="mock-chip mock-interactive" data-tip="new-itc">IT Component</div>
+        </div>
+        <div style="margin-top:12px; font-size:12px; color:#556b82; background:#f8f9fa; padding:10px; border-radius:6px; line-height:1.6;">
+          Name it as <em>"Source ↔ Target — data type"</em> (e.g. "ECC ↔ CRM – Order data"). Set type (<span class="mock-interactive" data-tip="new-interface" style="color:#0a6ed1;font-weight:600;cursor:pointer;">API/File/DB</span>) and direction. Then link the source and target Applications in the Relations tab.
+        </div>
+      </div>
+    </div>`,
+};
+
+// ── FS Guide data ─────────────────────────────────────────────────────────
+const FS_GUIDES = {
+  application: {
+    id: 'application',
+    label: 'Application',
+    color: '#1b6dd2',
+    letter: 'A',
+    definition: 'Software systems or programs that process business data and support business tasks. Applications are the central entities in LeanIX — they bridge business and IT.',
+    whyItMatters: 'The Portfolio Matrix, Technology Landscape, and Roadmap are all built around Applications. Without them, no report is possible.',
+    fields: [
+      { name: 'Name', req: 'must', desc: 'The display name of the application. Use the official system name, not a nickname.' },
+      { name: 'Lifecycle', req: 'must', desc: 'Active, Phase Out, End of Life, or Planned. Critical for Matrix coloring and obsolescence risk.' },
+      { name: 'Functional Fit', req: 'must', desc: 'How well the app supports its business function (Excellent / Adequate / Insufficient / Unreasonable). The rationalization signal.' },
+      { name: 'Business Criticality', req: 'must', desc: 'Operational importance (Mission Critical / Business Critical / Business Operational / Administrative). Drives prioritization.' },
+      { name: 'Responsible', req: 'should', desc: 'The person accountable for this application\'s data in LeanIX. Enables survey collection and data governance.' },
+      { name: 'Description', req: 'should', desc: 'One or two sentences on what the app does and who uses it. Helps stakeholders identify it without needing to ask.' },
+      { name: 'Technical Fit', req: 'nice', desc: 'Technical quality assessment (Good / Fair / Poor). Useful for modernization decisions.' },
+      { name: 'TIME', req: 'nice', desc: 'Transformation classification: Tolerate / Invest / Migrate / Eliminate. Required for roadmap.' },
+    ],
+    relations: [
+      { from: 'Application', arrow: '→ supports', to: 'Business Capability (what function does this app serve?)' },
+      { from: 'Application', arrow: '→ belongs to', to: 'Organization (which team or BU owns this app?)' },
+      { from: 'Application', arrow: '→ runs on', to: 'IT Component (what technology does this app depend on?)' },
+      { from: 'Application', arrow: '↔ interfaces with', to: 'Application (what other apps does it exchange data with?)' },
+    ],
+    examples: ['SAP ECC 6.0', 'Salesforce CRM', 'Workday HR', 'Custom Inventory Portal'],
+    docUrl: 'https://help.sap.com/docs/leanix/ea/application-modeling-guidelines',
+    docLabel: 'Application Modeling Guidelines →',
+  },
+  bc: {
+    id: 'bc',
+    label: 'Business Capability',
+    color: '#3fc380',
+    letter: 'BC',
+    definition: 'What your organization does — expressed as stable functions independent of technology or org structure. BCs answer "what capability does this application support?"',
+    whyItMatters: 'BCs are the axes of the Portfolio Matrix. Without them you have a flat list of apps. With them you can see overlap, gaps, and which functions are over- or under-invested.',
+    fields: [
+      { name: 'Name', req: 'must', desc: 'A business-oriented label (e.g. "Order Management", not "SAP SD Module"). Should be stable — not change when systems change.' },
+      { name: 'Description', req: 'must', desc: 'One sentence: what does this capability mean in your organization? Prevents ambiguity when app owners assign apps to BCs.' },
+      { name: 'Hierarchy Level', req: 'must', desc: 'L1 = major domain (e.g. "Finance"). L2 = sub-function (e.g. "Accounts Payable"). Aim for 7–20 L1, 5–10 L2 per L1.' },
+      { name: 'Tags', req: 'nice', desc: 'Optional grouping (e.g. "Core", "Enabling", "Customer-Facing"). Useful for roadmap filtering.' },
+    ],
+    relations: [
+      { from: 'Business Capability', arrow: '← supported by', to: 'Application (which apps enable this capability?)' },
+      { from: 'Business Capability', arrow: '← owned by', to: 'Organization (which business unit owns this domain?)' },
+    ],
+    examples: ['Finance → Accounts Payable', 'Supply Chain → Demand Planning', 'HR → Talent Acquisition', 'Customer → Order Management'],
+    docUrl: 'https://help.sap.com/docs/leanix/ea/business-capability-modeling-guidelines',
+    docLabel: 'Business Capability Modeling Guidelines →',
+    catalogUrl: 'https://help.sap.com/docs/leanix/ea/business-capabilities-in-reference-catalog',
+    catalogLabel: 'Start with the SAP Reference Catalog →',
+  },
+  organization: {
+    id: 'organization',
+    label: 'Organization',
+    color: '#e67e22',
+    letter: 'O',
+    definition: 'Your organization\'s hierarchical business structure — divisions, departments, business units, and teams. Organizations represent who owns and uses the applications.',
+    whyItMatters: 'Without Organizations, you can\'t answer "who is responsible for this app?" or "which BU has the most tech debt?" They\'re the ownership and accountability layer.',
+    fields: [
+      { name: 'Name', req: 'must', desc: 'Official org unit name. Use the same naming as your HR system for consistency.' },
+      { name: 'Hierarchy Level', req: 'must', desc: 'L1 = top-level division (e.g. "Finance"). L2 = department (e.g. "Group Controlling"). Mirror your actual org chart.' },
+      { name: 'Subtype', req: 'should', desc: 'Business Unit, Region, Legal Entity, Team, or Customer. Choose the subtype that best describes the unit.' },
+      { name: 'Description', req: 'nice', desc: 'Brief description of the unit\'s purpose. Useful when non-EA stakeholders are reading the landscape.' },
+    ],
+    relations: [
+      { from: 'Organization', arrow: '→ uses', to: 'Application (which apps does this org unit use?)' },
+      { from: 'Organization', arrow: '→ owns', to: 'Business Capability (which domains does this unit own?)' },
+    ],
+    examples: ['Finance → Group Controlling', 'Supply Chain → Procurement', 'IT → Enterprise Architecture', 'Sales → EMEA Region'],
+    docUrl: 'https://help.sap.com/docs/leanix/ea/organization-modeling-guidelines',
+    docLabel: 'Organization Modeling Guidelines →',
+  },
+};
+
+let activeFsGuide = 'application';
+
+function renderFsGuides() {
+  const body = document.getElementById('panel-body');
+  const g = FS_GUIDES[activeFsGuide];
+
+  let html = `<div class="fs-guide">`;
+
+  // Selector pills
+  html += `<div class="fs-guide-selector">`;
+  Object.values(FS_GUIDES).forEach(guide => {
+    html += `<button class="fs-btn ${guide.id === activeFsGuide ? 'active' : ''}" onclick="activeFsGuide='${guide.id}'; renderFsGuides();">${guide.label}</button>`;
+  });
+  html += `</div>`;
+
+  // Definition
+  html += `
+    <div class="fs-definition">
+      <div class="fsd-title">
+        <div class="fsd-icon" style="background:${g.color};">${g.letter}</div>
+        ${g.label}
+      </div>
+      <p>${g.definition}</p>
+    </div>
+    <div style="font-size:12px; color:#556b82; margin-bottom:10px; line-height:1.5; background:#fff8e6; border:1px solid #f0c050; border-radius:6px; padding:8px 10px;">
+      <strong style="color:#8c5c00;">Why it matters for onboarding:</strong> ${g.whyItMatters}
+    </div>`;
+
+  // Fields
+  html += `<div class="fs-section-title">Critical fields</div>`;
+  g.fields.forEach(f => {
+    const reqClass = f.req === 'must' ? 'must' : f.req === 'should' ? 'should' : 'nice';
+    const reqLabel = f.req === 'must' ? 'Must' : f.req === 'should' ? 'Should' : 'Nice';
+    html += `<div class="fs-field">
+      <div class="ff-name">${f.name}</div>
+      <div class="ff-req ${reqClass}">${reqLabel}</div>
+      <div class="ff-desc">${f.desc}</div>
+    </div>`;
+  });
+
+  // Relations
+  html += `<div class="fs-section-title">Key relations</div>`;
+  g.relations.forEach(r => {
+    html += `<div class="fs-relation">
+      <div class="fr-from">${r.from}</div>
+      <div class="fr-arrow">${r.arrow}</div>
+      <div class="fr-to">${r.to}</div>
+    </div>`;
+  });
+
+  // Examples
+  html += `
+    <div class="fs-example">
+      <div class="fe-title">Examples</div>
+      <ul>${g.examples.map(e => `<li>${e}</li>`).join('')}</ul>
+    </div>`;
+
+  // Doc links
+  html += `<a href="${g.docUrl}" target="_blank" class="fs-link">📄 ${g.docLabel}</a>`;
+  if (g.catalogUrl) {
+    html += `<a href="${g.catalogUrl}" target="_blank" class="fs-link">📚 ${g.catalogLabel}</a>`;
+  }
+
+  html += `</div>`;
+  body.innerHTML = html;
+}
+
+// ── Screen mock renderer ──────────────────────────────────────────────────
+function renderScreenMock() {
+  const area = document.getElementById('screen-mock-area');
+  if (!area) return;
+
+  // Determine which step is active
+  let mockKey = null;
+  if (selectedIntent) {
+    const rules = RULES[selectedIntent];
+    const current = rules.find(r => r.active(ws));
+    if (current) mockKey = current.id;
+  }
+
+  const mockFn = SCREEN_MOCKS[mockKey] || SCREEN_MOCKS[null];
+
+  area.innerHTML = `
+    <div style="padding:20px 28px 0;">
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:#556b82; margin-bottom:10px;">
+        ${selectedIntent ? '📍 Where to go next in LeanIX' : '📍 Your workspace'}
+      </div>
+      ${mockFn()}
+    </div>`;
+}
+
+// ── Override renderPanel to also update screen mock + show tabs ───────────
+const _origRenderPanel = renderPanel;
+renderPanel = function() {
+  _origRenderPanel();
+  document.getElementById('panel-tabs').style.display = selectedIntent ? 'flex' : 'none';
+  if (activeTab === 'journey') renderScreenMock();
+};
+
+// ── Override switchTab to update screen mock ──────────────────────────────
+const _switchTabOrig = switchTab;
+
+// ── Override applyControls to also update screen mock ─────────────────────
+const _origApply = applyControls;
+applyControls = function() {
+  _origApply();
+  renderScreenMock();
+};
+
+// ── Tooltip system ────────────────────────────────────────────────────────
+function showTip(el, path, desc, docUrl, docLabel, list) {
+  const tip = document.getElementById('mock-tip');
+  document.getElementById('tip-path').textContent = path;
+  const descEl = document.getElementById('tip-desc');
+  descEl.textContent = desc;
+  if (list && list.length) {
+    const ul = document.createElement('ul');
+    ul.style.cssText = 'margin:6px 0 0 14px; padding:0; color:#c8d8e8; line-height:1.7; font-size:11px;';
+    list.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      ul.appendChild(li);
+    });
+    descEl.appendChild(ul);
+  }
+  const linkEl = document.getElementById('tip-link');
+  linkEl.innerHTML = docUrl
+    ? `<a href="${docUrl}" target="_blank">📄 ${docLabel || 'Read the guide →'}</a>`
+    : '';
+  tip.style.display = 'block';
+  const r = el.getBoundingClientRect();
+  let top = r.bottom + 8;
+  let left = r.left;
+  if (left + 290 > window.innerWidth) left = window.innerWidth - 295;
+  if (top + 200 > window.innerHeight) top = r.top - 210;
+  tip.style.top = top + 'px';
+  tip.style.left = left + 'px';
+}
+function hideTip() {
+  document.getElementById('mock-tip').style.display = 'none';
+}
+document.addEventListener('click', function(e) {
+  const tip = document.getElementById('mock-tip');
+  if (!tip.contains(e.target) && !e.target.closest('.mock-interactive')) hideTip();
+});
+
+// ── Tip definitions keyed by data-tip attribute ───────────────────────────
+const TIPS = {
+  'connect-integration': {
+    path: 'Inventory → Inventory Tools → Connect Integration',
+    desc: 'Auto-discover apps from existing systems — no spreadsheet needed.',
+    list: ['SAP System Discovery — scans your SAP landscape', 'SaaS Discovery — detects cloud tools via SSO', 'ServiceNow CMDB — imports your existing inventory', 'GitHub / Jira — pulls repositories and projects'],
+    docUrl: 'https://help.sap.com/docs/leanix/ea/importing-fact-sheet-data-through-excel-file',
+    docLabel: 'All import methods →',
+  },
+  'inv-tools': {
+    path: 'Inventory → Inventory Tools ▾',
+    desc: 'Click "Inventory Tools" then choose "Import". Download the Excel template, fill in your applications, re-upload.',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/importing-fact-sheet-data-through-excel-file',
+    docLabel: 'Excel import guide →',
+  },
+  'import-excel': {
+    path: 'Inventory → Inventory Tools → Import → Excel',
+    desc: 'Download the Application template, fill Name + Lifecycle + Owner (minimum), re-upload. A list of 20–30 apps takes ~30 min.',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/importing-fact-sheet-data-through-excel-file',
+    docLabel: 'Full import guide →',
+  },
+  'bc-sidebar': {
+    path: 'Inventory → Filter by Type → Business Capability',
+    desc: 'Click "Business Capability" in the type sidebar to filter the inventory. Then open the Reference Catalog to import a pre-built model.',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/business-capabilities-in-reference-catalog',
+    docLabel: 'BC Reference Catalog →',
+  },
+  'ref-catalog': {
+    path: 'Inventory → Business Capability → Open Reference Catalog',
+    desc: 'The SAP Reference Catalog contains a pre-built L1/L2 BC model. Import it as a starting point — rename or remove capabilities to fit your org.',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/business-capabilities-in-reference-catalog',
+    docLabel: 'Reference Catalog guide →',
+  },
+  'relations-tab': {
+    path: 'Inventory → [Application Fact Sheet] → Relations tab',
+    desc: 'Open any Application fact sheet, click the Relations tab, then "+ Add" to link it to a Business Capability. For 10+ apps, use the bulk Excel import instead.',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/bulk-updating-data-in-inventory-table-view',
+    docLabel: 'Bulk relation import →',
+  },
+  'add-bc-rel': {
+    path: 'Application Fact Sheet → Relations → + Add Business Capability',
+    desc: 'Start typing the capability name to search. One application can support multiple BCs — link all that apply.',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/bulk-updating-data-in-inventory-table-view',
+    docLabel: 'Bulk relation import →',
+  },
+  'surveys-nav': {
+    path: 'More ▾ → Surveys → Create Survey',
+    desc: 'Navigate to the More menu in the top nav, open Surveys, then Create Survey. Select target fields, choose recipients by subscription role, and send.',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/creating-survey',
+    docLabel: 'Survey setup guide →',
+  },
+  'survey-field-ff': {
+    path: 'Survey → Field: Functional Fit',
+    desc: 'Include Functional Fit — this rates how well the app supports its business function (Excellent / Adequate / Insufficient / Unreasonable). Core rationalization signal.',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/creating-survey',
+    docLabel: 'Survey guide →',
+  },
+  'survey-field-bc': {
+    path: 'Survey → Field: Business Criticality',
+    desc: 'Include Business Criticality — this rates operational importance (Mission Critical / Business Critical / Business Operational / Administrative).',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/creating-survey',
+    docLabel: 'Survey guide →',
+  },
+  'new-itc': {
+    path: 'Inventory → + New Fact Sheet → IT Component',
+    desc: 'Select IT Component as the type. Set Tech Category (AI, Cloud Native, SaaS, On-Premise), the vendor/product name, and the End of Life date.',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/getting-started-building-your-it-component-inventory',
+    docLabel: 'IT Component guide →',
+  },
+  'tech-cat-ai': {
+    path: 'IT Component Fact Sheet → Tech Category → AI / ML',
+    desc: 'Setting Tech Category = "AI / ML" tags this component as an AI tool. This is what powers the AI governance report filter.',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/getting-started-building-your-it-component-inventory',
+    docLabel: 'IT Component guide →',
+  },
+  'time-bulk': {
+    path: 'Inventory → Applications → Bulk Edit → TIME Classification',
+    desc: 'Select multiple application rows, click Bulk Edit, and set the TIME field. T=Tolerate, I=Invest, M=Migrate, E=Eliminate.',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/time',
+    docLabel: 'TIME framework guide →',
+  },
+  'time-t': { path: 'TIME: Tolerate', desc: 'Keep for now. Low strategic value, no new investment. Typically legacy systems that still work but will not be enhanced.', docUrl: 'https://help.sap.com/docs/leanix/ea/time', docLabel: 'TIME guide →' },
+  'time-i': { path: 'TIME: Invest', desc: 'Strategic. Enhance and grow. These are the platforms you are betting on for the future.', docUrl: 'https://help.sap.com/docs/leanix/ea/time', docLabel: 'TIME guide →' },
+  'time-m': { path: 'TIME: Migrate', desc: 'Move to a new platform (e.g. S/4HANA). These apps stay in scope but in a new form.', docUrl: 'https://help.sap.com/docs/leanix/ea/time', docLabel: 'TIME guide →' },
+  'time-e': { path: 'TIME: Eliminate', desc: 'Retire. No replacement needed. These apps come out of your landscape.', docUrl: 'https://help.sap.com/docs/leanix/ea/time', docLabel: 'TIME guide →' },
+  'new-interface': {
+    path: 'Inventory → + New Fact Sheet → Interface',
+    desc: 'Name it "Source ↔ Target – data type". Set type (API/File/DB/Messaging) and direction (inbound/outbound/both). Link source + target Applications in Relations.',
+    docUrl: 'https://help.sap.com/docs/leanix/ea/interface-modeling-guidelines',
+    docLabel: 'Interface modeling guide →',
+  },
+};
+
+function tip(key, el) {
+  const t = TIPS[key];
+  if (t) showTip(el, t.path, t.desc, t.docUrl, t.docLabel, t.list);
+}
+
+// ── Override screen mock renderer to wire up click handlers ───────────────
+const _origRenderScreenMock = renderScreenMock;
+renderScreenMock = function() {
+  _origRenderScreenMock();
+  // wire up all data-tip elements
+  document.querySelectorAll('[data-tip]').forEach(el => {
+    const key = el.getAttribute('data-tip');
+    el.classList.add('mock-interactive');
+    el.addEventListener('click', function(e) { e.stopPropagation(); tip(key, el); });
+  });
+};
+
+// ── Screen switcher ───────────────────────────────────────────────────────
+function setScreen(name) {
+  document.getElementById('screen-dashboard').style.display = name === 'dashboard' ? 'block' : 'none';
+  document.getElementById('screen-inventory').style.display = name === 'inventory' ? 'flex' : 'none';
+  document.getElementById('screen-mock-area').style.display = 'none';
+  const btnDash = document.getElementById('tog-dash');
+  const btnInv = document.getElementById('tog-inv');
+  btnDash.style.background = name === 'dashboard' ? '#0a6ed1' : 'transparent';
+  btnDash.style.color = name === 'dashboard' ? '#fff' : '#556b82';
+  btnInv.style.background = name === 'inventory' ? '#0a6ed1' : 'transparent';
+  btnInv.style.color = name === 'inventory' ? '#fff' : '#556b82';
+}
+// Init: show dashboard, hide mock area
+document.getElementById('screen-mock-area').style.display = 'none';
+
+// ── Init ──────────────────────────────────────────────────────────────────
+renderPanel();
+</script>
+<div id="mock-tip">
+  <span class="mt-close" onclick="hideTip()">✕</span>
+  <div class="mt-path" id="tip-path"></div>
+  <div class="mt-desc" id="tip-desc"></div>
+  <div id="tip-link"></div>
+</div>
+
+</body>
+</html>
